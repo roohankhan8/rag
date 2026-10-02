@@ -123,6 +123,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///rag.db"
 db.init_app(app)
 with app.app_context():
     db.create_all()
+```
 
 ### Complete Phase 3 implementation: SQLite with the standard library
 
@@ -342,7 +343,6 @@ curl http://127.0.0.1:5000/api/documents
 ```
 
 The uploaded document should still be listed.
-```
 
 ## Phase 4: Authentication and user isolation
 

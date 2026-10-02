@@ -3,9 +3,10 @@ from flask import Blueprint, jsonify, request
 from werkzeug.utils import secure_filename
 from .extractors import extract_document
 from .rag import answer_question, chunk_text, embed
-from .storage import store
+from .storage import add_document, delete_document, list_documents, search
 
 api = Blueprint("api", __name__)
+
 
 @api.get("/health")
 def health():
@@ -20,27 +21,40 @@ def upload_document():
 
     filename = secure_filename(uploaded.filename)
     extension = os.path.splitext(filename)[1].lower()
-    allowed = {".txt", ".md", ".pdf", ".docx"}
-    if extension not in allowed:
+    if extension not in {".txt", ".md", ".pdf", ".docx"}:
         return jsonify(error="supported files are .txt, .md, .pdf, and .docx"), 400
 
     try:
         sections = extract_document(filename, uploaded.read())
-    except (ValueError, Exception) as error:
+    except Exception as error:
         return jsonify(error=f"could not read document: {error}"), 400
 
-    chunks = []
+    text_chunks = []
     for section in sections:
-        for chunk in chunk_text(section["text"]):
-            chunks.append({"text": chunk, "page": section["page"]})
-
-    if not chunks:
+        for text in chunk_text(section["text"]):
+            text_chunks.append({"text": text, "page": section["page"]})
+    if not text_chunks:
         return jsonify(error="file is empty"), 400
 
-    for index, chunk in enumerate(chunks):
-        store.add(filename, filename, index, chunk["text"], embed(chunk["text"]), chunk["page"])
+    embedded_chunks = [
+        {"text": chunk["text"], "page": chunk["page"], "embedding": embed(chunk["text"])}
+        for chunk in text_chunks
+    ]
+    document_id = add_document(filename, embedded_chunks)
+    return jsonify(document_id=document_id, filename=uploaded.filename,
+                   chunks=len(text_chunks)), 201
 
-    return jsonify(document_id=filename, chunks=len(chunks)), 201
+
+@api.get("/documents")
+def documents():
+    return jsonify(documents=list_documents())
+
+
+@api.delete("/documents/<int:document_id>")
+def remove_document(document_id):
+    if not delete_document(document_id):
+        return jsonify(error="document not found"), 404
+    return "", 204
 
 
 @api.post("/chat")
@@ -50,9 +64,7 @@ def chat():
     if not question:
         return jsonify(error="question is required"), 400
 
-    sources = store.search(embed(question))
+    sources = search(embed(question))
     if not sources:
         return jsonify(answer="I do not know based on the uploaded documents.", sources=[])
-
     return jsonify(answer=answer_question(question, sources), sources=sources)
-

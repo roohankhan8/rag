@@ -1,4 +1,4 @@
-Flask
+flask
 flask-cors
 python-dotenv
 openai
@@ -6,3 +6,4 @@ pytest
 google-genai
 pypdf
 python-docx
+flask-sqlalchemy
