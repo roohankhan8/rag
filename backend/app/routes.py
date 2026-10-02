@@ -1,5 +1,7 @@
 import os
 from flask import Blueprint, jsonify, request
+from werkzeug.utils import secure_filename
+from .extractors import extract_document
 from .rag import answer_question, chunk_text, embed
 from .storage import store
 
@@ -16,19 +18,29 @@ def upload_document():
     if not uploaded or not uploaded.filename:
         return jsonify(error="file is required"), 400
 
-    extension = os.path.splitext(uploaded.filename)[1].lower()
-    if extension not in {".txt", ".md"}:
-        return jsonify(error="only .txt and .md files are supported"), 400
+    filename = secure_filename(uploaded.filename)
+    extension = os.path.splitext(filename)[1].lower()
+    allowed = {".txt", ".md", ".pdf", ".docx"}
+    if extension not in allowed:
+        return jsonify(error="supported files are .txt, .md, .pdf, and .docx"), 400
 
-    text = uploaded.read().decode("utf-8", errors="replace")
-    chunks = chunk_text(text)
+    try:
+        sections = extract_document(filename, uploaded.read())
+    except (ValueError, Exception) as error:
+        return jsonify(error=f"could not read document: {error}"), 400
+
+    chunks = []
+    for section in sections:
+        for chunk in chunk_text(section["text"]):
+            chunks.append({"text": chunk, "page": section["page"]})
+
     if not chunks:
         return jsonify(error="file is empty"), 400
 
     for index, chunk in enumerate(chunks):
-        store.add(uploaded.filename, uploaded.filename, index, chunk, embed(chunk))
+        store.add(filename, filename, index, chunk["text"], embed(chunk["text"]), chunk["page"])
 
-    return jsonify(document_id=uploaded.filename, chunks=len(chunks)), 201
+    return jsonify(document_id=filename, chunks=len(chunks)), 201
 
 
 @api.post("/chat")

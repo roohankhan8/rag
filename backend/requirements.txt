@@ -4,3 +4,5 @@ python-dotenv
 openai
 pytest
 google-genai
+pypdf
+python-docx

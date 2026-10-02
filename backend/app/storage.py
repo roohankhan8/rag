@@ -5,13 +5,14 @@ class MemoryStore:
     def __init__(self):
         self.items = []
 
-    def add(self, document_id, filename, chunk_index, text, embedding):
+    def add(self, document_id, filename, chunk_index, text, embedding, page=None):
         self.items.append({
             "document_id": document_id,
             "filename": filename,
             "chunk_index": chunk_index,
             "text": text,
             "embedding": embedding,
+            "page": page,
         })
 
     def search(self, query_embedding, limit=4):

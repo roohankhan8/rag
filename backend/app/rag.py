@@ -30,8 +30,12 @@ def embed(text):
 
 
 def answer_question(question, sources):
+    def source_text(source):
+        page = f" page {source['page']}" if source.get("page") else ""
+        return f"[{source['filename']}{page} #{source['chunk_index']}] {source['text']}"
+
     context = "\n\n".join(
-        f"[{source['filename']} #{source['chunk_index']}] {source['text']}"
+        source_text(source)
         for source in sources
     )
     prompt = (
