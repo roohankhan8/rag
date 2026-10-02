@@ -1,6 +1,7 @@
 import os
 # from openai import OpenAI
 from google import genai
+from google.genai.errors import ServerError
 
 # client = OpenAI(api_key=os.environ.get("AI_API_KEY"))
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
@@ -23,7 +24,7 @@ def chunk_text(text, size=800, overlap=100):
 
 def embed(text):
     response = client.models.embed_content(
-        model=os.environ["AI_EMBEDDING_MODEL"],
+        model=os.environ.get("AI_EMBEDDING_MODEL", "gemini-embedding-001"),
         contents=text,
     )
     return response.embeddings[0].values
@@ -44,6 +45,12 @@ def answer_question(question, sources):
         "Do not use outside knowledge or invent citations.\n\n"
         f"Context:\n{context}\n\nQuestion: {question}"
     )
-    chat = client.chats.create(model=os.environ["AI_CHAT_MODEL"])
-    response = chat.send_message(prompt)
+    primary = os.environ.get("AI_CHAT_MODEL", "gemini-2.5-flash")
+    fallback = os.environ.get("AI_CHAT_FALLBACK_MODEL", "gemini-3.5-flash-lite")
+    try:
+        response = client.models.generate_content(model=primary, contents=prompt)
+    except ServerError as error:
+        if error.code != 503 or fallback == primary:
+            raise
+        response = client.models.generate_content(model=fallback, contents=prompt)
     return response.text

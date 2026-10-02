@@ -33,6 +33,7 @@ Create `backend/.env`:
 DATABASE_URL=postgresql+psycopg://rag:rag@localhost:5432/rag
 GEMINI_API_KEY=your-api-key
 AI_CHAT_MODEL=gemini-2.5-flash
+AI_CHAT_FALLBACK_MODEL=gemini-3.5-flash-lite
 AI_EMBEDDING_MODEL=gemini-embedding-001
 FLASK_PORT=5000
 ```
