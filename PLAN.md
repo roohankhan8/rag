@@ -90,6 +90,8 @@ Add this phase before exposing the application to multiple users or the public i
 - Return a clear response when the documents do not contain the answer.
 - Add a small evaluation dataset with expected answers and sources.
 
+Status: implemented configurable retrieval limits, similarity filtering, grounded fallback responses, and a retrieval evaluation script.
+
 Add this phase when the MVP works but answers are incomplete, irrelevant, or poorly grounded.
 
 ## Phase 6: Conversational experience

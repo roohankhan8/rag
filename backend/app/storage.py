@@ -1,4 +1,5 @@
 import math
+import os
 
 from .models import Chunk, Document, db
 
@@ -48,12 +49,16 @@ def list_documents(user_id):
     } for item in Document.query.filter_by(user_id=user_id).order_by(Document.id.desc()).all()]
 
 
-def search(query_embedding, user_id, limit=4):
-    def cosine(a, b):
-        dot = sum(x * y for x, y in zip(a, b))
-        norm_a = math.sqrt(sum(x * x for x in a))
-        norm_b = math.sqrt(sum(x * x for x in b))
-        return dot / (norm_a * norm_b) if norm_a and norm_b else 0
+def cosine_similarity(a, b):
+    dot = sum(x * y for x, y in zip(a, b))
+    norm_a = math.sqrt(sum(x * x for x in a))
+    norm_b = math.sqrt(sum(x * x for x in b))
+    return dot / (norm_a * norm_b) if norm_a and norm_b else 0
+
+
+def search(query_embedding, user_id, limit=None, threshold=None):
+    limit = limit or int(os.getenv("RAG_RETRIEVAL_LIMIT", "4"))
+    threshold = threshold if threshold is not None else float(os.getenv("RAG_SIMILARITY_THRESHOLD", "0.35"))
 
     results = []
     for chunk in Chunk.query.join(Document).filter(Document.status == "ready", Document.user_id == user_id):
@@ -63,6 +68,7 @@ def search(query_embedding, user_id, limit=4):
             "chunk_index": chunk.chunk_index,
             "text": chunk.text,
             "page": chunk.page,
-            "score": cosine(query_embedding, chunk.embedding),
+            "score": cosine_similarity(query_embedding, chunk.embedding),
         })
-    return sorted(results, key=lambda item: item["score"], reverse=True)[:limit]
+    return [item for item in sorted(results, key=lambda item: item["score"], reverse=True)
+            if item["score"] >= threshold][:limit]

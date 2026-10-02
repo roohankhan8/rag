@@ -9,6 +9,7 @@ The MVP supports:
 - In-memory vector similarity search
 - Asking questions about uploaded documents
 - Returning answers with source excerpts
+- Filtering weak retrieval matches and returning a clear not-found response
 
 ## Requirements
 
@@ -86,6 +87,12 @@ Sample documents:
 cd backend
 .\.venv\Scripts\Activate.ps1
 pytest
+```
+
+Run the retrieval evaluation after creating a user and uploading the sample documents:
+
+```powershell
+python evaluate_retrieval.py
 ```
 
 ## Build the frontend

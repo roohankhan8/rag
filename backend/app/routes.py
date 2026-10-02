@@ -108,5 +108,5 @@ def chat():
 
     sources = search(embed(question), user.id)
     if not sources:
-        return jsonify(answer="I do not know based on the uploaded documents.", sources=[])
+        return jsonify(answer="I could not find that in your documents.", sources=[])
     return jsonify(answer=answer_question(question, sources), sources=sources)

@@ -39,8 +39,9 @@ def answer_question(question, sources):
         for source in sources
     )
     prompt = (
-        "Answer using only the context below. If the answer is not in the "
-        "context, say you do not know.\n\n"
+        "Answer using only the context below. If the answer is not supported "
+        "by the context, say: I could not find that in your documents. "
+        "Do not use outside knowledge or invent citations.\n\n"
         f"Context:\n{context}\n\nQuestion: {question}"
     )
     chat = client.chats.create(model=os.environ["AI_CHAT_MODEL"])
