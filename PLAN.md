@@ -76,6 +76,8 @@ Add this phase when data must survive application restarts or users need saved c
 - Add logout and session/token handling.
 - Add authorization checks for every document operation.
 
+Status: implemented with Flask sessions, password hashing, per-user document ownership, and frontend login/register gating.
+
 Add this phase before exposing the application to multiple users or the public internet.
 
 ## Phase 5: Improved RAG quality

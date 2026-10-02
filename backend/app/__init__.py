@@ -1,3 +1,4 @@
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,6 +17,7 @@ def create_app(test_config=None):
         TESTING=False,
         SQLALCHEMY_DATABASE_URI="sqlite:///rag.db",
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        SECRET_KEY=os.environ.get("SECRET_KEY", "dev-only-change-me"),
     )
     if test_config:
         app.config.update(test_config)
