@@ -1,4 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+    --font-sans: 'DM Sans', sans-serif;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+}
 
 :root {
     font-family: 'DM Sans', sans-serif;
@@ -13,9 +20,13 @@
     box-sizing: border-box;
 }
 
-body {
-    margin: 0;
+html,
+body,
+#app {
+    width: 100%;
     min-width: 320px;
+    height: 100%;
+    margin: 0;
 }
 
 button,
@@ -44,6 +55,7 @@ button:disabled {
     white-space: nowrap;
     border: 0;
 }
+
 .toast {
     position: fixed;
     z-index: 20;
@@ -62,10 +74,44 @@ button:disabled {
     font-size: 12px;
     animation: toast-in .2s ease-out;
 }
-.toast-icon { display: grid; place-items: center; width: 19px; height: 19px; flex: 0 0 19px; border-radius: 50%; color: #fff; background: #c65f4e; font: 700 12px 'DM Mono', monospace; }
-.toast-close { margin-left: auto; padding: 0 2px; border: 0; color: #a2786e; background: transparent; font-size: 19px; line-height: 1; }
-.toast-close:hover { color: #713f38; }
-@keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+.toast-icon {
+    display: grid;
+    place-items: center;
+    width: 19px;
+    height: 19px;
+    flex: 0 0 19px;
+    border-radius: 50%;
+    color: #fff;
+    background: #c65f4e;
+    font: 700 12px 'DM Mono', monospace;
+}
+
+.toast-close {
+    margin-left: auto;
+    padding: 0 2px;
+    border: 0;
+    color: #a2786e;
+    background: transparent;
+    font-size: 19px;
+    line-height: 1;
+}
+
+.toast-close:hover {
+    color: #713f38;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
 .app-shell {
     min-height: 100vh;
@@ -317,6 +363,9 @@ button:disabled {
 
 .answer-area {
     flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #d7b9aa transparent;
     padding: 0 5% 32px;
 }
 
