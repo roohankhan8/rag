@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from pgvector.sqlalchemy import Vector
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
@@ -30,6 +31,6 @@ class Chunk(db.Model):
     document_id = db.Column(db.Integer, db.ForeignKey("document.id"), nullable=False)
     chunk_index = db.Column(db.Integer, nullable=False)
     text = db.Column(db.Text, nullable=False)
-    embedding = db.Column(db.JSON, nullable=False)
+    embedding = db.Column(Vector(3072).with_variant(db.JSON(), "sqlite"), nullable=False)
     page = db.Column(db.Integer)
     document = db.relationship("Document", back_populates="chunks")

@@ -7,3 +7,5 @@ google-genai
 pypdf
 python-docx
 flask-sqlalchemy
+psycopg[binary]
+pgvector

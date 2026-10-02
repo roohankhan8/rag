@@ -9,6 +9,7 @@ The MVP supports:
 - In-memory vector similarity search
 - Asking questions about uploaded documents
 - Returning answers with source excerpts
+- PostgreSQL + pgvector semantic search
 - Filtering weak retrieval matches and returning a clear not-found response
 
 ## Requirements
@@ -29,11 +30,14 @@ pip install -r requirements.txt
 Create `backend/.env`:
 
 ```env
+DATABASE_URL=postgresql+psycopg://rag:rag@localhost:5432/rag
 GEMINI_API_KEY=your-api-key
 AI_CHAT_MODEL=gemini-2.5-flash
 AI_EMBEDDING_MODEL=gemini-embedding-001
 FLASK_PORT=5000
 ```
+
+The app creates the configured PostgreSQL database if it is missing, provided the connection role has `CREATEDB` permission. If the application role does not have that permission, set `DATABASE_ADMIN_URL` to a separate admin connection. The app enables the pgvector extension on startup. The SQLite configuration remains available as a local fallback, but existing SQLite embeddings are not migrated automatically.
 
 Start Flask:
 

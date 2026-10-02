@@ -1,10 +1,12 @@
-import math
 import os
 
 from .models import Chunk, Document, db
 
 
 def init_db():
+    if db.engine.dialect.name == "postgresql":
+        db.session.execute(db.text("CREATE EXTENSION IF NOT EXISTS vector"))
+        db.session.commit()
     db.create_all()
     # Keep the local Phase 3 database bootable after adding ownership.
     inspector = db.inspect(db.engine)
@@ -50,6 +52,8 @@ def list_documents(user_id):
 
 
 def cosine_similarity(a, b):
+    # Retained for the unit test and local fallback; Postgres uses pgvector below.
+    import math
     dot = sum(x * y for x, y in zip(a, b))
     norm_a = math.sqrt(sum(x * x for x in a))
     norm_b = math.sqrt(sum(x * x for x in b))
@@ -60,15 +64,30 @@ def search(query_embedding, user_id, limit=None, threshold=None):
     limit = limit or int(os.getenv("RAG_RETRIEVAL_LIMIT", "4"))
     threshold = threshold if threshold is not None else float(os.getenv("RAG_SIMILARITY_THRESHOLD", "0.35"))
 
-    results = []
-    for chunk in Chunk.query.join(Document).filter(Document.status == "ready", Document.user_id == user_id):
-        results.append({
-            "document_id": chunk.document_id,
-            "filename": chunk.document.filename,
-            "chunk_index": chunk.chunk_index,
-            "text": chunk.text,
-            "page": chunk.page,
-            "score": cosine_similarity(query_embedding, chunk.embedding),
-        })
-    return [item for item in sorted(results, key=lambda item: item["score"], reverse=True)
-            if item["score"] >= threshold][:limit]
+    if db.engine.dialect.name != "postgresql":
+        results = []
+        for chunk in Chunk.query.join(Document).filter(Document.status == "ready", Document.user_id == user_id):
+            results.append({
+                "document_id": chunk.document_id, "filename": chunk.document.filename,
+                "chunk_index": chunk.chunk_index, "text": chunk.text, "page": chunk.page,
+                "score": cosine_similarity(query_embedding, chunk.embedding),
+            })
+        return [item for item in sorted(results, key=lambda item: item["score"], reverse=True)
+                if item["score"] >= threshold][:limit]
+
+    distance = Chunk.embedding.cosine_distance(query_embedding)
+    rows = (db.session.query(Chunk, distance.label("distance"))
+            .join(Document)
+            .filter(Document.status == "ready", Document.user_id == user_id,
+                    distance <= 1 - threshold)
+            .order_by(distance)
+            .limit(limit)
+            .all())
+    return [{
+        "document_id": chunk.document_id,
+        "filename": chunk.document.filename,
+        "chunk_index": chunk.chunk_index,
+        "text": chunk.text,
+        "page": chunk.page,
+        "score": 1 - distance_value,
+    } for chunk, distance_value in rows]
